@@ -1,23 +1,14 @@
 // src/utils/auth.js
+import { jwtDecode } from "jwt-decode";
 
-const TOKEN_KEY = "auth_token";
-
-// Store JWT in localStorage
-export const storeToken = (token) => {
-  localStorage.setItem(TOKEN_KEY, token);
-};
-
-// Get JWT from localStorage
-export const getToken = () => {
-  return localStorage.getItem(TOKEN_KEY);
-};
-
-// Check if user is authenticated
 export const isAuthenticated = () => {
-  return !!getToken();
-};
+  const token = localStorage.getItem("accessToken");
+  if (!token) return false;
 
-// Clear token (for logout)
-export const clearToken = () => {
-  localStorage.removeItem(TOKEN_KEY);
+  try {
+    const decoded = jwtDecode(token);
+    return decoded?.exp * 1000 > Date.now(); // Valid token check
+  } catch (error) {
+    return false; // Invalid token
+  }
 };

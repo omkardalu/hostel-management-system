@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
-    required: true
+    required: true,
   },
   provider: {
     type: String,
@@ -27,6 +27,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['admin', 'student', 'staff'],
     default: 'student', // Default role is 'student'
+  },
+  profilePicture: {
+    type: String, // Store Google profile picture URL
+    default: 'default-avatar.png',
   },
   created_at: {
     type: Date,

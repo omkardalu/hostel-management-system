@@ -1,45 +1,63 @@
-const dotenv = require('dotenv');
-const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const dotenv = require('dotenv');
+
 dotenv.config();
 
-passport.use(new GoogleStrategy(
-  {
+module.exports = (passport) => {
+  passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     callbackURL: '/api/auth/google/callback',
-  },
-  async (accessToken, refreshToken, profile, done) => {
+  }, async (accessToken, refreshToken, profile, done) => {
     try {
-      // Ensure consistent querying with googleId
-      let user = await User.findOne({ googleId: profile.id });
+      console.log("Google Profile Data:", profile);
+
+      // Extract profile picture (use _json for a safer reference)
+      const profilePicture = profile._json?.picture || profile.photos?.[0]?.value || 'default-avatar.png';
+
+      let user = await User.findOne({ provider_id: profile.id });
 
       if (!user) {
+        // Create a new user if not found
         user = new User({
-          googleId: profile.id, // Added googleId to match schema
+          googleId: profile.id,
+          provider: 'google',
           provider_id: profile.id,
           name: profile.displayName,
           email: profile.emails[0].value,
+          profilePicture,
           role: 'student',
-          provider: 'google',
         });
         await user.save();
       }
 
-      // Generate JWT
+      // Generate JWT with profile picture
       const token = jwt.sign(
-        { userId: user._id, role: user.role },
+        {
+          userId: user._id,
+          role: user.role,
+          profilePicture: user.profilePicture,
+        },
         process.env.JWT_SECRET,
         { expiresIn: '1h' }
       );
 
-      return done(null, { user, token });
-    } catch (err) {
-      return done(err, false);
-    }
-  }
-));
+      console.log("Generated JWT:", token);
 
-module.exports = passport;
+      return done(null, { user, token });
+    } catch (error) {
+      console.error("OAuth Error:", error);
+      return done(error, null);
+    }
+  }));
+
+  passport.serializeUser((user, done) => {
+    done(null, user);
+  });
+
+  passport.deserializeUser((obj, done) => {
+    done(null, obj);
+  });
+};

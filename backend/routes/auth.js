@@ -1,10 +1,10 @@
-const dotenv = require('dotenv');
 const express = require('express');
-const passport = require('../middlewares/passport');
+const passport = require('passport');
 const jwt = require('jsonwebtoken');
-const router = express.Router();
+const dotenv = require('dotenv');
 
 dotenv.config();
+const router = express.Router();
 
 // JWT verification middleware
 const verifyToken = (req, res, next) => {
@@ -19,28 +19,27 @@ const verifyToken = (req, res, next) => {
 };
 
 // Initiate Google OAuth login
-router.get('/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+router.get('/google', passport.authenticate('google', {
+  scope: ['profile', 'email'], // Ensure correct scopes
+}));
 
 // Google OAuth callback
 router.get('/google/callback', passport.authenticate('google', { session: false }), (req, res) => {
   try {
-    const payload = {
-      userId: req.user.id,
-      role: req.user.role || 'student',
-      provider: 'google'
-    };
+    const { user, token } = req.user;
 
-    const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
-
+    // Set JWT in httpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Strict'
+      sameSite: 'Strict',
     });
 
+    // Redirect user to frontend dashboard
     const redirectUrl = `${process.env.FRONTEND_URL}/dashboard?token=${token}`;
     res.redirect(redirectUrl);
   } catch (error) {
+    console.error('OAuth Callback Error:', error);
     res.status(500).json({ message: 'OAuth callback error', error: error.message });
   }
 });
@@ -48,8 +47,8 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
 // Protected route: Get user profile
 router.get('/user/profile', verifyToken, (req, res) => {
   try {
-    const { userId, role } = req.user;
-    res.status(200).json({ message: 'User profile fetched', user: { userId, role } });
+    const { userId, role, profilePicture } = req.user;
+    res.status(200).json({ message: 'User profile fetched', user: { userId, role, profilePicture } });
   } catch (error) {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }

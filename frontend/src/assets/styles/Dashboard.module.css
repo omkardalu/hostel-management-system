@@ -1,0 +1,39 @@
+/* Dashboard.module.css */
+
+.dashboardContainer {
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.title {
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.profileContainer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.profileImage {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.role {
+  font-size: 14px;
+  color: #6b7280; 
+}

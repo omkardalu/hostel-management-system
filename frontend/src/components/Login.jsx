@@ -1,7 +1,6 @@
 // src/components/Login.jsx
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { storeToken, getToken } from "../utils/auth";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,13 +10,13 @@ const Login = () => {
     const queryParams = new URLSearchParams(window.location.search);
     const token = queryParams.get("token");
     if (token) {
-      storeToken(token);
+      localStorage.setItem("accessToken", token);
       navigate("/dashboard");
     }
   }, [navigate]);
 
   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:3000/api/auth/google";
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/api/auth/google`;
   };
 
   return (
