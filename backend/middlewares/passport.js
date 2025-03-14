@@ -5,11 +5,15 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+const callbackURL = process.env.NODE_ENV === 'production'
+  ? 'https://hostel-management-system-3rr9.onrender.com/api/auth/google/callback'
+  : 'http://localhost:3000/api/auth/google/callback';
+
 module.exports = (passport) => {
   passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: '/api/auth/google/callback',
+    callbackURL: callbackURL,
   }, async (accessToken, refreshToken, profile, done) => {
     try {
       console.log("Google Profile Data:", profile);
