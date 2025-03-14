@@ -5,6 +5,10 @@ const passport = require('passport'); // ✅ Import passport directly
 require('./middlewares/passport')(passport); // ✅ Initialize Passport
 const authRoutes = require('./routes/auth');
 const cookieParser = require('cookie-parser');
+require('./models/HostelMember.js');
+require('./models/Hostel');
+const hostelRoutes = require('./routes/hostel');
+
 
 dotenv.config();
 const app = express();
@@ -16,6 +20,8 @@ app.use(passport.initialize()); // ✅ Initialize passport
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/hostels', hostelRoutes);
+
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI, {

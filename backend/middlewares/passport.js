@@ -2,6 +2,7 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const dotenv = require('dotenv');
+const HostelMember = require('../models/HostelMember');
 
 dotenv.config();
 
@@ -38,16 +39,18 @@ module.exports = (passport) => {
       }
 
       // Generate JWT with profile picture
-      const token = jwt.sign(
-        {
-          userId: user._id,
-          role: user.role,
-          profilePicture: user.profilePicture,
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: '1h' }
-      );
 
+      const token = jwt.sign({
+        userId: user._id,
+        profilePicture: user.profilePicture,
+        hostels: await HostelMember.find({ user_id: user._id }).select('hostel_id role'),
+      }, process.env.JWT_SECRET, { expiresIn: '1d' });
+
+      console.log('✅ JWT Payload:', {
+        userId: user._id,
+        profilePicture: user.profilePicture,
+        hostels: await HostelMember.find({ user_id: user._id }).select('hostel_id role'),
+      });
       console.log("Generated JWT:", token);
 
       return done(null, { user, token });
