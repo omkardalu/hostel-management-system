@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const navigate = useNavigate();
 
-  // Extract JWT from URL after successful login
   useEffect(() => {
     const queryParams = new URLSearchParams(window.location.search);
     const token = queryParams.get("token");

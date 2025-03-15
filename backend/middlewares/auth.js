@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 // JWT Verification Middleware (Already implemented)
 const authenticateUser = (req, res, next) => {
-  const token = req.cookies?.token; // Ensure cookies exist
+  const token = req.cookies?.token || req.query.token;
   if (!token) {
     return res.status(401).json({ message: 'Unauthorized: No token provided' });
   }

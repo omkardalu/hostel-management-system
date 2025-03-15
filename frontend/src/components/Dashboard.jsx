@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import styles from "../assets/styles/Dashboard.module.css";
+import { logoutUser } from "../utils/auth";
 
 const Dashboard = () => {
   const [user, setUser] = useState({ email: "", role: "", profilePicture: "" });
@@ -71,6 +72,10 @@ const Dashboard = () => {
           </div>
         </header>
 
+        <button className={styles.logoutButton} onClick={logoutUser}>
+          Logout
+        </button>
+        
         <section>
           {user.role === "admin" && <p>Welcome, Admin! Manage Rooms & Payments.</p>}
           {user.role === "student" && <p>Welcome, Student! View your details.</p>}

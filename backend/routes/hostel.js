@@ -4,6 +4,45 @@ const Hostel = require('../models/Hostel');
 const HostelMember = require('../models/HostelMember');
 const { authenticateUser } = require('../middlewares/auth');
 
+
+router.patch('/manage-request/:member_id/:action', authenticateUser, async (req, res) => {
+  try {
+    const { member_id, action } = req.params;
+
+    const memberRequest = await HostelMember.findById(member_id).populate('hostel_id');
+
+    if (!memberRequest) {
+      return res.status(404).send('❌ Join request not found.');
+    }
+
+    // Ensure only the hostel admin can approve/reject
+    const isAdmin = await HostelMember.findOne({
+      user_id: req.user.userId,
+      hostel_id: memberRequest.hostel_id._id,
+      role: 'admin',
+    });
+
+    if (!isAdmin) {
+      return res.status(403).send('❌ Only admins can approve/reject requests.');
+    }
+
+    // Approve or Reject based on action
+    if (action === 'approve') {
+      memberRequest.status = 'approved';
+      await memberRequest.save();
+      return res.status(200).send(`✅ Request approved for ${memberRequest.user_id}`);
+    } else if (action === 'reject') {
+      await HostelMember.findByIdAndDelete(member_id);
+      return res.status(200).send(`❌ Request rejected and removed.`);
+    } else {
+      return res.status(400).send('❌ Invalid action. Use "approve" or "reject".');
+    }
+  } catch (error) {
+    console.error('❌ Error managing request:', error);
+    res.status(500).send('❌ Internal server error.');
+  }
+});
+
 router.get('/my-hostels', authenticateUser, async (req, res) => {
   try {
     // Find all approved hostels where the user is a member
@@ -11,8 +50,8 @@ router.get('/my-hostels', authenticateUser, async (req, res) => {
       user_id: req.user.userId,
       status: 'approved',
     }).populate({
-      path: 'hostel_id', // Populate hostel details
-      select: 'name address created_by', // Select required fields
+      path: 'hostel_id',
+      select: 'name address created_by',
     });
 
     if (!userHostels.length) {

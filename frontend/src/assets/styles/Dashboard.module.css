@@ -37,3 +37,12 @@
   font-size: 14px;
   color: #6b7280; 
 }
+
+.logoutButton {
+  padding: 8px 16px;
+  background-color: red;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}

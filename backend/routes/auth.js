@@ -20,22 +20,19 @@ const verifyToken = (req, res, next) => {
 
 // Initiate Google OAuth login
 router.get('/google', passport.authenticate('google', {
-  scope: ['profile', 'email'], // Ensure correct scopes
+  scope: ['profile', 'email'],
 }));
 
-// Google OAuth callback
 router.get('/google/callback', passport.authenticate('google', { session: false }), (req, res) => {
   try {
     const { user, token } = req.user;
 
-    // Set JWT in httpOnly cookie
     res.cookie('token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'Strict',
     });
 
-    // Redirect user to frontend dashboard
     const redirectUrl = `${process.env.FRONTEND_URL}/dashboard?token=${token}`;
     res.redirect(redirectUrl);
   } catch (error) {
@@ -44,7 +41,6 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
   }
 });
 
-// Protected route: Get user profile
 router.get('/user/profile', verifyToken, (req, res) => {
   try {
     const { userId, role, profilePicture } = req.user;
@@ -54,7 +50,6 @@ router.get('/user/profile', verifyToken, (req, res) => {
   }
 });
 
-// Logout route
 router.post('/logout', (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ message: 'Logout successful' });
