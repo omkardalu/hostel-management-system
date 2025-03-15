@@ -27,10 +27,17 @@ router.get('/google/callback', passport.authenticate('google', { session: false 
   try {
     const { user, token } = req.user;
 
-    res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'Strict',
+    const refreshToken = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.REFRESH_TOKEN_SECRET,
+      { expiresIn: '7d' }
+    );
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true, // 🔹 Secure, not accessible by JavaScript
+      secure: process.env.NODE_ENV === 'production', // 🔹 Works only on HTTPS in production
+      sameSite: 'Strict', // 🔹 Prevents CSRF attacks
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 🔹 7 days
     });
 
     const redirectUrl = `${process.env.FRONTEND_URL}/dashboard?token=${token}`;
@@ -49,6 +56,31 @@ router.get('/user/profile', verifyToken, (req, res) => {
     res.status(500).json({ message: 'Internal server error', error: error.message });
   }
 });
+
+router.get('/refresh', (req, res) => {
+  const refreshToken = req.cookies?.refreshToken; 
+
+  if (!refreshToken) {
+    return res.status(401).json({ message: '❌ Unauthorized: No refresh token', forceLogout: true });
+  }
+
+  jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(403).json({ message: '❌ Refresh token expired', forceLogout: true });
+    }
+
+    // ✅ Generate new access token
+    const newAccessToken = jwt.sign(
+      { userId: decoded.userId, role: decoded.role, profilePicture: decoded.profilePicture },
+      process.env.JWT_SECRET,
+      { expiresIn: '15m' }
+    );
+
+    res.json({ message: '✅ Token refreshed', accessToken: newAccessToken });
+  });
+});
+
+
 
 router.post('/logout', (req, res) => {
   res.clearCookie('token');

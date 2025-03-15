@@ -25,3 +25,22 @@ export const logoutUser = async () => {
     window.location.href = "/";
   }
 };
+
+
+export const refreshAccessToken = async () => {
+  try {
+    const { data } = await api.get("/api/auth/refresh");
+
+    if (data.accessToken) {
+      localStorage.setItem("accessToken", data.accessToken);
+      return data.accessToken;
+    } else {
+      throw new Error("No new access token received");
+    }
+  } catch (error) {
+    console.error("Token refresh failed:", error);
+    localStorage.removeItem("accessToken"); 
+    window.location.href = "/"; 
+    return null;
+  }
+};

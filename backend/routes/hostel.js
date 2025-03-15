@@ -3,7 +3,42 @@ const router = express.Router();
 const Hostel = require('../models/Hostel');
 const HostelMember = require('../models/HostelMember');
 const { authenticateUser } = require('../middlewares/auth');
+const User = require('../models/User');
 
+router.get('/all', async (req, res) => {
+  try {
+    // Find all hostels
+    const hostels = await Hostel.find().lean();
+
+    if (!hostels.length) {
+      return res.status(404).json({ message: "❌ No hostels found." });
+    }
+
+    // Fetch total members and admin names
+    const formattedHostels = await Promise.all(
+      hostels.map(async (hostel) => {
+        const totalMembers = await HostelMember.countDocuments({ hostel_id: hostel._id });
+        const admin = await User.findById(hostel.created_by).select('name');
+
+        return {
+          hostelId: hostel._id,
+          name: hostel.name,
+          address: hostel.address,
+          totalMembers,
+          adminName: admin ? admin.name : "Unknown",
+        };
+      })
+    );
+
+    res.status(200).json({
+      message: "✅ Hostels retrieved successfully.",
+      hostels: formattedHostels,
+    });
+  } catch (error) {
+    console.error("❌ Error fetching hostels:", error);
+    res.status(500).json({ message: "❌ Internal server error." });
+  }
+});
 
 router.patch('/manage-request/:member_id/:action', authenticateUser, async (req, res) => {
   try {

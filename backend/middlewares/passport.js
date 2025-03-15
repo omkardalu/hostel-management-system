@@ -19,13 +19,13 @@ module.exports = (passport) => {
     try {
       console.log("Google Profile Data:", profile);
 
-      // Extract profile picture (use _json for a safer reference)
+      // Extract profile picture safely
       const profilePicture = profile._json?.picture || profile.photos?.[0]?.value || 'default-avatar.png';
 
       let user = await User.findOne({ provider_id: profile.id });
 
       if (!user) {
-        // Create a new user if not found
+        // Create new user
         user = new User({
           googleId: profile.id,
           provider: 'google',
@@ -38,18 +38,20 @@ module.exports = (passport) => {
         await user.save();
       }
 
-      // Generate JWT with profile picture
+      // ✅ Fetch hostel memberships **only once**
+      const userHostels = await HostelMember.find({ user_id: user._id }).select('hostel_id role');
 
+      // ✅ Generate JWT
       const token = jwt.sign({
         userId: user._id,
         profilePicture: user.profilePicture,
-        hostels: await HostelMember.find({ user_id: user._id }).select('hostel_id role'),
+        hostels: userHostels, // Already fetched, no need to query again
       }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
       console.log('✅ JWT Payload:', {
         userId: user._id,
         profilePicture: user.profilePicture,
-        hostels: await HostelMember.find({ user_id: user._id }).select('hostel_id role'),
+        hostels: userHostels, // Using cached value instead of querying twice
       });
       console.log("Generated JWT:", token);
 

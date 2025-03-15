@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const hostelMemberSchema = new mongoose.Schema({
   user_id: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User', // References the User model
+    ref: 'User',
     required: true,
   },
   hostel_id: {
